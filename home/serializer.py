@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Persons
+from .models import Persons,Workers
 
 class Personserialzer(serializers.ModelSerializer):
     class Meta:
@@ -16,3 +16,9 @@ class Personserialzer(serializers.ModelSerializer):
                raise serializers.ValidationError("age should be greater than 18")
           
           return data
+    
+class Workerserialzer(serializers.ModelSerializer):
+     class Meta:
+          model = Workers
+          fields = '__all__'
+          

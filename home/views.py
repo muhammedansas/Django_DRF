@@ -1,10 +1,10 @@
 from django.shortcuts import render
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from .models import Persons
-from .serializer import Personserialzer
+from .models import Persons,Workers
+from .serializer import Personserialzer,Workerserialzer
 from rest_framework.views import APIView
-from rest_framework import viewsets
+from rest_framework import viewsets,status
 
 # Create your views here.
 
@@ -86,7 +86,7 @@ def person(request):
             serializer.save()
             return Response(serializer.data)
         return Response(serializer.errors)
-    elif request.method == 'PATCH':
+    elif request.method == "PATCH":
         data = request.data
         SingleObj = Persons.objects.get(id = data['id'])
         serializer = Personserialzer(SingleObj,data=data,partial = True)
@@ -95,4 +95,39 @@ def person(request):
             return Response(serializer.data)
         return Response(serializer.errors)
     
+@api_view(['GET','POST','PUT','PATCH','DELETE'])
+def workers(request):
+    if request.method == 'GET':
+        obj = Workers.objects.all()
+        serializer = Workerserialzer(obj,many=True)
+        return Response(serializer.data,status=status.HTTP_200_OK)
+    elif request.method == 'POST':
+        data = request.data
+        serializer = Workerserialzer(data=data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data,status=status.HTTP_201_CREATED)
+        return Response(serializer.errors)
+    elif request.method == 'PUT':
+        data = request.data
+        obj = Workers.objects.get(id=data['id'])
+        serializer = Workerserialzer(obj,data=data, partial = False)
+        if serializer.is_valid():   
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors)
+    elif request.method == 'PATCH':
+        data = request.data
+        obj = Workers.objects.get(id = data['id'])
+        serializer = Workerserialzer(obj,data=data,partial = True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors)
+    elif request.method == 'DELETE':
+        data = request.data
+        obj = Workers.objects.get(id = data['id'])
+        obj.delete()
+        return Response({"message":"data has deleted"})
+
         
