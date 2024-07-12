@@ -4,8 +4,39 @@ from rest_framework.response import Response
 from .models import Persons
 from .serializer import Personserialzer
 from rest_framework.views import APIView
+from rest_framework import viewsets
 
 # Create your views here.
+
+
+# normal View sets in DRF:
+# /////////////////////////////////////////////////////////////////////////////////
+class NormalViewSets(viewsets.ViewSet):
+    def list(self,request):
+        PersonObj = Persons.objects.all()
+        serializer = Personserialzer(PersonObj, many = True)
+        return Response(serializer.data)
+
+
+
+# Model view sets:
+# ////////////////////////////////////////////////////////////////////////////////
+
+class Modelviewsets(viewsets.ModelViewSet):
+    serializer_class = Personserialzer
+    queryset = Persons.objects.all()
+
+    def list(self,request):
+        search = request.GET.get('search')
+        queryset = self.queryset
+
+        if search:
+            queryset = queryset.filter(name__startswith = search)
+
+        serializer = Personserialzer(queryset,many = True)
+        return Response(serializer.data)    
+
+
 
 # class based APIview method:
 # //////////////////////////////////////////////////////////////////////////////////
@@ -18,9 +49,6 @@ class ClassBaseView(APIView):
     def post(self,request):
         return Response("this class based view post method")
 
-
-
-    
 # function based APIview method:
 # //////////////////////////////////////////////////////////////////////////////////////
 @api_view(['GET','POST'])
