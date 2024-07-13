@@ -5,6 +5,7 @@ from .models import Persons,Workers
 from .serializer import Personserialzer,Workerserialzer
 from rest_framework.views import APIView
 from rest_framework import viewsets,status
+from django.contrib.auth.models import AbstractUser
 
 # Create your views here.
 
