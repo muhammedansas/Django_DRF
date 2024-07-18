@@ -15,4 +15,5 @@ urlpatterns = [
     path('classbasedview/',views.ClassBaseView.as_view(),name='classbasedview'),
     path('noramlviewset/',views.NormalViewSets.as_view({'get':'list'}),name='noramlviewset'),
     path('workers/',views.workers,name='workers'),
+    path('logout/',views.Logout.as_view(),name='logout'),
 ]

@@ -1,11 +1,16 @@
 from django.shortcuts import render
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view,permission_classes
 from rest_framework.response import Response
 from .models import Persons,Workers
 from .serializer import Personserialzer,Workerserialzer
+from rest_framework.authentication import BasicAuthentication
+from rest_framework.permissions import IsAuthenticated,IsAuthenticatedOrReadOnly
 from rest_framework.views import APIView
 from rest_framework import viewsets,status
 from django.contrib.auth.models import AbstractUser
+from django.contrib.auth import logout
+from .CustomePermissions import Mypermission
+
 
 # Create your views here.
 
@@ -26,6 +31,8 @@ class NormalViewSets(viewsets.ViewSet):
 class Modelviewsets(viewsets.ModelViewSet):
     serializer_class = Personserialzer
     queryset = Persons.objects.all()
+    # authentication_classes = [BasicAuthentication]
+    permission_classes = [IsAuthenticated]
 
     def list(self,request):
         search = request.GET.get('search')
@@ -37,7 +44,10 @@ class Modelviewsets(viewsets.ModelViewSet):
         serializer = Personserialzer(queryset,many = True)
         return Response(serializer.data)    
 
-
+class Logout(APIView):
+    def post(self,request):
+        logout(request)
+        return Response({"message":"sucessfully logout"})
 
 # class based APIview method:
 # //////////////////////////////////////////////////////////////////////////////////
@@ -65,7 +75,7 @@ def index(request):
         print("this is post")
         return Response("This is POST method")
     
-
+@permission_classes([Mypermission])
 @api_view(['GET','POST','PUT','PATCH','DELETE'])
 def person(request):
     if request.method == 'GET':
@@ -96,6 +106,8 @@ def person(request):
             return Response(serializer.data)
         return Response(serializer.errors)
     
+    
+@permission_classes([IsAuthenticatedOrReadOnly])  
 @api_view(['GET','POST','PUT','PATCH','DELETE'])
 def workers(request):
     if request.method == 'GET':
