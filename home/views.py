@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from rest_framework.decorators import api_view,permission_classes
+from rest_framework.decorators import api_view,permission_classes,authentication_classes
 from rest_framework.response import Response
 from .models import Persons,Workers
 from .serializer import Personserialzer,Workerserialzer
@@ -10,6 +10,9 @@ from rest_framework import viewsets,status
 from django.contrib.auth.models import AbstractUser
 from django.contrib.auth import logout
 from .CustomePermissions import Mypermission
+from rest_framework.pagination import PageNumberPagination
+from rest_framework_simplejwt.authentication import JWTAuthentication
+from django.core import paginator
 
 
 # Create your views here.
@@ -20,9 +23,19 @@ from .CustomePermissions import Mypermission
 class NormalViewSets(viewsets.ViewSet):
     def list(self,request):
         PersonObj = Persons.objects.all()
-        serializer = Personserialzer(PersonObj, many = True)
+        page = request.GET.get('page',1)
+        page_size = 2
+        paginater = paginator(PersonObj,page_size)
+        serializer = Personserialzer(paginater.page(page), many = True)
         return Response(serializer.data)
+    
 
+
+# pagination:
+# /////////////////////////////////////////////////////////////////////////////////
+class customPagination(PageNumberPagination):
+    page_size = 1
+    page_size_query_param = 'page'
 
 
 # Model view sets:
@@ -31,18 +44,21 @@ class NormalViewSets(viewsets.ViewSet):
 class Modelviewsets(viewsets.ModelViewSet):
     serializer_class = Personserialzer
     queryset = Persons.objects.all()
-    # authentication_classes = [BasicAuthentication]
-    permission_classes = [IsAuthenticated]
+    pagination_class = customPagination
+    
 
     def list(self,request):
         search = request.GET.get('search')
         queryset = self.queryset
+        
 
         if search:
             queryset = queryset.filter(name__startswith = search)
 
-        serializer = Personserialzer(queryset,many = True)
-        return Response(serializer.data)    
+        paginated_queryset = self.paginate_queryset(queryset)    
+
+        serializer = Personserialzer(paginated_queryset,many = True)
+        return self.get_paginated_response({"status":200,"data":serializer.data})    
 
 class Logout(APIView):
     def post(self,request):
@@ -75,7 +91,7 @@ def index(request):
         print("this is post")
         return Response("This is POST method")
     
-@permission_classes([Mypermission])
+@authentication_classes([JWTAuthentication])
 @api_view(['GET','POST','PUT','PATCH','DELETE'])
 def person(request):
     if request.method == 'GET':
@@ -107,9 +123,10 @@ def person(request):
         return Response(serializer.errors)
     
     
-@permission_classes([IsAuthenticatedOrReadOnly])  
+@permission_classes([Mypermission])  
 @api_view(['GET','POST','PUT','PATCH','DELETE'])
 def workers(request):
+    print(request.method,'lllllllll')
     if request.method == 'GET':
         obj = Workers.objects.all()
         serializer = Workerserialzer(obj,many=True)

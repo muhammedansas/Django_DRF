@@ -12,7 +12,6 @@ from django.views.decorators.csrf import csrf_exempt
 # Create your views here.
 
 class RegistrationApi(APIView):
-    permission_classes=[AllowAny]
     def post(self,request):
         data = request.data
         serializer = RegisterSerializer(data=data)
